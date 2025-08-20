@@ -1,4 +1,4 @@
-// components/Header.tsx
+import Navbar from "@/components/Navbar";  // ← এটা মিসিং ছিল
 import { Separator } from "@/components/ui/separator";
 import Navbar from "@/components/Navbar";   // ✅ Navbar ইমপোর্ট করা হলো
 
