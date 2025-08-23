@@ -1,0 +1,39 @@
+'use client';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+
+interface DarkModeContextType {
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+}
+
+const DarkModeContext = createContext<DarkModeContextType>({
+  darkMode: false,
+  toggleDarkMode: () => {},
+});
+
+export const DarkModeProvider = ({ children }: { children: ReactNode }) => {
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Load dark mode from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('darkMode');
+    setDarkMode(stored === 'true');
+  }, []);
+
+  // Apply class & save to localStorage
+  useEffect(() => {
+    if (darkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+    localStorage.setItem('darkMode', darkMode ? 'true' : 'false');
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode(prev => !prev);
+
+  return (
+    <DarkModeContext.Provider value={{ darkMode, toggleDarkMode }}>
+      {children}
+    </DarkModeContext.Provider>
+  );
+};
+
+export const useDarkMode = () => useContext(DarkModeContext);
