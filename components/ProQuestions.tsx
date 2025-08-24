@@ -18,7 +18,7 @@ export default function ProQuestions({ isUnlocked, onUnlock }: ProQuestionsProps
       {isUnlocked ? (
         <ul className="list-disc list-inside text-gray-800 space-y-2">
           <li>Pro Q1: Solve x² + 5x + 6 = 0</li>
-          <li>Pro Q2: Explain Newton's 2nd Law of Motion.</li>
+          <li>Pro Q2: Explain Newton&apos;s 2nd Law of Motion.</li>
           <li>Pro Q3: Long Essay on Liberation War 1971.</li>
         </ul>
       ) : (

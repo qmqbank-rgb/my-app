@@ -12,7 +12,7 @@ export default function FreeQuestions({ isUnlocked, onUnlock }: FreeQuestionsPro
         <ul className="list-disc list-inside text-gray-700 space-y-2">
           <li>Question 1: 2 + 2 = ?</li>
           <li>Question 2: What is the capital of Bangladesh?</li>
-          <li>Question 3: Who wrote "Sonar Bangla"?</li>
+          <li>Question 3: Who wrote &quot;Sonar Bangla&quot;?</li>
         </ul>
       ) : (
         <div className="text-center">
