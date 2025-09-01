@@ -1,14 +1,10 @@
 import "./globals.css";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import Navbar from "@/components/Navbar";   // Navbar import
-import { DarkModeProvider } from "@/context/DarkModeContext"; // Dark Mode import
+import Providers from "./providers";
+import Navbar from "@/components/Navbar";
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "QmqBank",
-  description: "QmqBank App with Navbar",
+export const metadata = {
+  title: "My App",
+  description: "Next.js Auth Example",
 };
 
 export default function RootLayout({
@@ -18,12 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
-        {/* Dark Mode Provider wraps Navbar + all pages */}
-        <DarkModeProvider>
-          <Navbar /> {/* একবারই থাকবে, সব পেজে share হবে */}
-          <main className="min-h-screen">{children}</main>
-        </DarkModeProvider>
+      <body>
+        <Providers>
+          <Navbar />
+          <main className="p-6">{children}</main>
+        </Providers>
       </body>
     </html>
   );

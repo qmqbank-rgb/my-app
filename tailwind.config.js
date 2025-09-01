@@ -1,9 +1,10 @@
-// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class', // important: 'class' strategy
-  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
-  theme: {
-    extend: {},
-  },
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}"
+  ],
+  darkMode: 'class',
+  theme: { extend: {} },
   plugins: [],
-};
+}

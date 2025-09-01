@@ -1,49 +1,127 @@
 "use client";
 
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
 
 export default function Home() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const { data, error } = await supabase.from<User>("users").select("*");
+      if (error) {
+        console.error("Fetch error:", error.message, error.details, error.hint);
+        setErrorMsg(error.message);
+        setUsers([]);
+        return;
+      }
+      setUsers(data || []);
+    } catch (err: any) {
+      console.error("Unexpected fetch error:", err);
+      setErrorMsg(err.message || "Unknown error");
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+
+    const usersChannel = supabase
+      .channel("public:users")
+      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, (payload) => {
+        const newRow = payload.new;
+        const oldRow = payload.old;
+
+        switch (payload.eventType) {
+          case "INSERT":
+            if (newRow) setUsers((prev) => [...prev, newRow]);
+            break;
+          case "UPDATE":
+            if (newRow)
+              setUsers((prev) =>
+                prev.map((u) => (u.id === newRow.id ? newRow : u))
+              );
+            break;
+          case "DELETE":
+            if (oldRow) setUsers((prev) => prev.filter((u) => u.id !== oldRow.id));
+            break;
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(usersChannel);
+    };
+  }, []);
+
+  const addUser = async () => {
+    const name = prompt("Enter user name");
+    const email = prompt("Enter user email");
+    if (!name || !email) return;
+    const { error } = await supabase.from("users").insert({ name, email });
+    if (error) console.error("Insert error:", error.message);
+  };
+
+  const updateUser = async (user: User) => {
+    const name = prompt("Update name", user.name);
+    const email = prompt("Update email", user.email);
+    if (!name || !email) return;
+    const { error } = await supabase.from("users").update({ name, email }).eq("id", user.id);
+    if (error) console.error("Update error:", error.message);
+  };
+
+  const deleteUser = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+    const { error } = await supabase.from("users").delete().eq("id", id);
+    if (error) console.error("Delete error:", error.message);
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (errorMsg) return <p style={{ color: "red" }}>Error: {errorMsg}</p>;
+
   return (
-    <main className="pt-20 max-w-6xl mx-auto px-6">
-      {/* Hero Section */}
-      <section className="text-center mb-16">
-        <h1 className="text-5xl md:text-6xl font-extrabold text-blue-600 dark:text-blue-400 mb-4">
-          🏠 Welcome to Our Platform
-        </h1>
-        <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
-          Explore insightful tutorials, professional tips, and interactive content to boost your skills and knowledge.
-        </p>
-      </section>
-
-      {/* Features / Cards Section */}
-      <section className="grid gap-8 md:grid-cols-3">
-        <Link href="/tutorial/react" className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-blue-600 transition-colors">
-            React Tutorials
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Learn how to build modern React apps from scratch with step-by-step tutorials.
-          </p>
-        </Link>
-
-        <Link href="/tutorial/nextjs" className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-blue-600 transition-colors">
-            Next.js Tips
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Optimize your Next.js apps and boost performance with professional tricks.
-          </p>
-        </Link>
-
-        <Link href="/tutorial/css" className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-blue-600 transition-colors">
-            CSS Tricks
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Make stunning UIs with advanced CSS techniques and creative designs.
-          </p>
-        </Link>
-      </section>
-    </main>
+    <div style={{ padding: "2rem" }}>
+      <h1>Users Table (Real-time CRUD)</h1>
+      <button onClick={addUser} style={{ marginBottom: "1rem" }}>Add User</button>
+      {users.length === 0 ? (
+        <p>No users found.</p>
+      ) : (
+        <table border={1} cellPadding={10} style={{ borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>
+                  <button onClick={() => updateUser(user)}>Edit</button>{" "}
+                  <button onClick={() => deleteUser(user.id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
   );
 }

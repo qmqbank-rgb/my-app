@@ -1,3 +1,5 @@
+"use client";
+
 interface FreeQuestionsProps {
   isUnlocked: boolean;
   onUnlock: () => void;
@@ -5,36 +7,20 @@ interface FreeQuestionsProps {
 
 export default function FreeQuestions({ isUnlocked, onUnlock }: FreeQuestionsProps) {
   return (
-    <section className="bg-blue-50 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-2xl">
-      <h2 className="text-xl font-semibold mb-4 text-blue-700 flex items-center gap-2">🆓 Free Questions</h2>
-
+    <section className="bg-green-50 rounded-2xl p-6 shadow-md mb-6">
+      <h3 className="text-xl font-semibold mb-4">📝 Free Questions</h3>
       {isUnlocked ? (
-        <ul className="list-disc list-inside text-gray-700 space-y-2">
-          <li>Question 1: 2 + 2 = ?</li>
-          <li>Question 2: What is the capital of Bangladesh?</li>
-          <li>Question 3: Who wrote &quot;Sonar Bangla&quot;?</li>
+        <ul className="list-disc list-inside space-y-2">
+          <li>Q1: What is React?</li>
+          <li>Q2: Explain useState hook.</li>
+          <li>Q3: Difference between client and server side rendering.</li>
         </ul>
       ) : (
         <div className="text-center">
-          <p className="text-gray-600 mb-4">🔒 Unlock করলে প্রশ্নগুলো দেখতে পাবে।</p>
+          <p className="text-gray-700 mb-4">🔒 Unlock free questions to view them.</p>
           <button
             onClick={onUnlock}
-            className="
-              px-6 py-3
-              rounded-xl
-              font-semibold
-              text-white
-              bg-blue-600
-              shadow-lg
-              hover:bg-blue-700
-              hover:scale-105
-              hover:shadow-2xl
-              active:scale-95
-              transition
-              duration-300
-              ease-in-out
-              transform
-            "
+            className="px-6 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition"
           >
             Unlock Free Questions
           </button>
