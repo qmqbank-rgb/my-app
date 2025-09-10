@@ -1,83 +1,187 @@
-"use client";
-
-import Link from "next/link";
-import { signIn, signOut, useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { Sun, Moon, Menu, X } from "lucide-react";
+'use client';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import { FiBell, FiUser, FiUpload, FiMenu, FiX } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
+import DarkModeToggle from './DarkModeToggle';
 
 export default function Navbar() {
-  const { data: session } = useSession();
-  const [darkMode, setDarkMode] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<{ id: string; name: string; avatarUrl?: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  };
+
+  const linkClass = (href: string) =>
+    pathname === href
+      ? "border-b-2 border-yellow-400 text-yellow-400 pb-1 transition-colors duration-200 text-lg font-semibold"
+      : "text-gray-900 dark:text-white hover:text-yellow-300 transition-colors duration-200 text-lg font-semibold";
 
   useEffect(() => {
-    if (darkMode) document.documentElement.classList.add("dark");
-    else document.documentElement.classList.remove("dark");
-  }, [darkMode]);
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single();
+        setUser({
+          id: user.id,
+          name: user.user_metadata.full_name || 'User',
+          avatarUrl: profile?.avatar_url || undefined,
+        });
+      }
+    };
+    getUser();
+  }, []);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(`${user.id}/profile.png`, file, { upsert: true });
+    if (uploadError) return;
+
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(`${user.id}/profile.png`);
+
+    const avatarUrl = urlData.publicUrl;
+    await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', user.id);
+    setUser(prev => (prev ? { ...prev, avatarUrl } : prev));
+  };
+
+  const getInitials = (name: string) =>
+    name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    if (dropdownOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
 
   return (
-    <nav className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-900 shadow-md">
-      <div className="flex items-center space-x-4">
-        <Link href="/" className="font-bold text-xl text-gray-800 dark:text-gray-100">
-          MyApp
+    <nav className="
+      sticky top-0 z-50 
+      bg-gradient-to-r from-blue-600/80 to-purple-600/80 
+      dark:from-gray-900/60 dark:to-gray-900/60
+      backdrop-blur-md border-b border-white/20 dark:border-gray-700/50 
+      shadow-lg
+    ">
+      <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
+        {/* Logo */}
+        <Link href="/" className="flex items-center">
+          <Image src="/qmqbank_logo.svg" alt="Logo" width={48} height={48} priority />
         </Link>
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-        >
-          {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
-      </div>
 
-      <div className="hidden md:flex items-center space-x-4">
-        {session ? (
-          <>
-            <span className="text-gray-800 dark:text-gray-200">Hi, {session.user?.name}</span>
-            <button
-              onClick={() => signOut()}
-              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => signIn("github")}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Login
+        {/* Desktop Links */}
+        <ul className="hidden md:flex items-center space-x-8">
+          <li><Link href="/" className={linkClass("/")}>Home</Link></li>
+          <li><Link href="/about" className={linkClass("/about")}>About</Link></li>
+          <li><Link href="/contact" className={linkClass("/contact")}>Contact</Link></li>
+          <li><Link href="/dashboard" className={linkClass("/dashboard")}>Dashboard</Link></li>
+        </ul>
+
+        {/* Right Side */}
+        <div className="flex items-center space-x-4">
+          {/* Notification */}
+          <button className="relative text-gray-900 dark:text-white hover:text-yellow-300">
+            <FiBell size={20} />
+            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
-        )}
-      </div>
 
-      <div className="md:hidden">
-        <button onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
+          {/* Dark Mode */}
+          <DarkModeToggle />
 
-      {menuOpen && (
-        <div className="absolute top-16 right-4 bg-gray-100 dark:bg-gray-900 p-4 rounded shadow-md flex flex-col space-y-2 md:hidden">
-          {session ? (
-            <>
-              <span className="text-gray-800 dark:text-gray-200">{session.user?.name}</span>
-              <button
-                onClick={() => signOut()}
-                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => signIn("github")}
-              className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Login
+          {/* Profile Dropdown */}
+          <div className="relative hidden md:block" ref={dropdownRef}>
+            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="avatar" className="w-8 h-8 rounded-full border-2 border-yellow-400" />
+              ) : user ? (
+                <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
+                  {getInitials(user.name)}
+                </div>
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-700 flex items-center justify-center text-white">
+                  <FiUser size={16} />
+                </div>
+              )}
+              {user && <span className="text-white font-semibold">{user.name}</span>}
             </button>
-          )}
+
+            <AnimatePresence>
+              {dropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 mt-2 w-44 
+                             bg-white/90 dark:bg-gray-800/90 
+                             backdrop-blur-lg shadow-xl rounded-lg z-50"
+                >
+                  <Link href="/profile" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Profile</Link>
+                  <Link href="/settings" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Settings</Link>
+                  <button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-900 dark:text-white" onClick={() => fileInputRef.current?.click()}>
+                    <FiUpload /> Upload Avatar
+                  </button>
+                  <input type="file" accept="image/*" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" />
+                  <button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500" onClick={handleLogout}>Logout</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button className="md:hidden text-gray-900 dark:text-white hover:text-yellow-300" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          </button>
         </div>
-      )}
+      </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="md:hidden bg-gradient-to-r from-blue-600/90 to-purple-600/90 dark:from-gray-900/80 dark:to-gray-900/80 backdrop-blur-lg border-t border-white/20 overflow-hidden"
+          >
+            <ul className="flex flex-col space-y-2 p-4">
+              <li><Link href="/" className="text-gray-900 dark:text-white" onClick={() => setMobileOpen(false)}>Home</Link></li>
+              <li><Link href="/about" className="text-gray-900 dark:text-white" onClick={() => setMobileOpen(false)}>About</Link></li>
+              <li><Link href="/contact" className="text-gray-900 dark:text-white" onClick={() => setMobileOpen(false)}>Contact</Link></li>
+              <li><Link href="/dashboard" className="text-gray-900 dark:text-white" onClick={() => setMobileOpen(false)}>Dashboard</Link></li>
+              <li className="border-t pt-2">
+                {user ? (
+                  <button className="w-full text-left text-red-500" onClick={handleLogout}>Logout</button>
+                ) : (
+                  <Link href="/login" className="text-gray-900 dark:text-white" onClick={() => setMobileOpen(false)}>Login</Link>
+                )}
+              </li>
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

@@ -1,127 +1,222 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+import React, { useEffect, useState } from "react";
+import { BookOpen, Crown, Info } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const router = useRouter();
+  const [showGreeting, setShowGreeting] = useState(true);
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      const { data, error } = await supabase.from<User>("users").select("*");
-      if (error) {
-        console.error("Fetch error:", error.message, error.details, error.hint);
-        setErrorMsg(error.message);
-        setUsers([]);
-        return;
-      }
-      setUsers(data || []);
-    } catch (err: any) {
-      console.error("Unexpected fetch error:", err);
-      setErrorMsg(err.message || "Unknown error");
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
+  const isLoggedIn = false; // Auth logic
+
+  const handleGetStarted = () => {
+    if (isLoggedIn) router.push("/dashboard");
+    else router.push("/register");
   };
+
+  const featureCards = [
+    {
+      title: "Free Questions",
+      description: "Hundreds of free practice questions for quick learning.",
+      icon: <BookOpen className="w-10 h-10 text-blue-600 dark:text-blue-400 mb-3" />,
+      bgColor: "bg-blue-50 dark:bg-gray-800/90",
+    },
+    {
+      title: "Pro Questions",
+      description: "Premium questions with solutions & analytics.",
+      icon: <Crown className="w-10 h-10 text-purple-600 dark:text-purple-400 mb-3" />,
+      bgColor: "bg-purple-50 dark:bg-gray-800/90",
+    },
+    {
+      title: "About the App",
+      description: "Organized question bank by subjects & topics.",
+      icon: <Info className="w-10 h-10 text-green-600 dark:text-green-400 mb-3" />,
+      bgColor: "bg-green-50 dark:bg-gray-800/90",
+    },
+  ];
 
   useEffect(() => {
-    fetchUsers();
-
-    const usersChannel = supabase
-      .channel("public:users")
-      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, (payload) => {
-        const newRow = payload.new;
-        const oldRow = payload.old;
-
-        switch (payload.eventType) {
-          case "INSERT":
-            if (newRow) setUsers((prev) => [...prev, newRow]);
-            break;
-          case "UPDATE":
-            if (newRow)
-              setUsers((prev) =>
-                prev.map((u) => (u.id === newRow.id ? newRow : u))
-              );
-            break;
-          case "DELETE":
-            if (oldRow) setUsers((prev) => prev.filter((u) => u.id !== oldRow.id));
-            break;
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(usersChannel);
-    };
+    const timer = setTimeout(() => setShowGreeting(false), 1500); // সালাম দ্রুত যাবে
+    return () => clearTimeout(timer);
   }, []);
 
-  const addUser = async () => {
-    const name = prompt("Enter user name");
-    const email = prompt("Enter user email");
-    if (!name || !email) return;
-    const { error } = await supabase.from("users").insert({ name, email });
-    if (error) console.error("Insert error:", error.message);
-  };
-
-  const updateUser = async (user: User) => {
-    const name = prompt("Update name", user.name);
-    const email = prompt("Update email", user.email);
-    if (!name || !email) return;
-    const { error } = await supabase.from("users").update({ name, email }).eq("id", user.id);
-    if (error) console.error("Update error:", error.message);
-  };
-
-  const deleteUser = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-    const { error } = await supabase.from("users").delete().eq("id", id);
-    if (error) console.error("Delete error:", error.message);
-  };
-
-  if (loading) return <p>Loading...</p>;
-  if (errorMsg) return <p style={{ color: "red" }}>Error: {errorMsg}</p>;
-
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Users Table (Real-time CRUD)</h1>
-      <button onClick={addUser} style={{ marginBottom: "1rem" }}>Add User</button>
-      {users.length === 0 ? (
-        <p>No users found.</p>
-      ) : (
-        <table border={1} cellPadding={10} style={{ borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>
-                  <button onClick={() => updateUser(user)}>Edit</button>{" "}
-                  <button onClick={() => deleteUser(user.id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+    <div className="relative flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white overflow-hidden">
+      {/* Floating Particles */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {Array.from({ length: 50 }).map((_, idx) => (
+          <motion.div
+            key={idx}
+            className="absolute bg-white dark:bg-gray-400 rounded-full opacity-20"
+            style={{
+              width: `${Math.random() * 4 + 2}px`,
+              height: `${Math.random() * 4 + 2}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -8, 0],
+              x: [0, 6, 0],
+              opacity: [0.2, 0.5, 0.2],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: Math.random() * 3 + 2,
+              ease: "easeInOut",
+              delay: Math.random() * 1,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Hero Section */}
+      <div className="container mx-auto p-6 flex-1 flex flex-col items-center justify-center relative z-10">
+        {/* Greeting Overlay */}
+        <AnimatePresence>
+          {showGreeting && (
+            <motion.div
+              key="greeting-overlay"
+              initial={{ opacity: 0, scale: 1.2, filter: "blur(6px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 0.85, filter: "blur(4px)" }}
+              transition={{ duration: 1 }}
+              className="absolute flex items-center justify-center w-full"
+            >
+              <h1
+                className="text-5xl sm:text-6xl font-extrabold arabic-font whitespace-nowrap text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-yellow-400 to-green-400 drop-shadow-2xl animate-float"
+                style={{ direction: "rtl" }}
+              >
+                ا لسلام عليكم . اهلا سهلا مرحبا
+              </h1>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Welcome Text */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: showGreeting ? 0 : 1, y: showGreeting ? 20 : 0 }}
+          transition={{ duration: 1, delay: 1.6 }}
+          className="text-5xl sm:text-6xl font-extrabold drop-shadow-lg whitespace-nowrap text-center flex items-center gap-2"
+        >
+          <span className="animated-icon text-6xl">🎓</span>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-400 animate-bounce-slow">
+            Welcome to our Question Bank
+          </span>
+        </motion.h1>
+
+        {/* Subtext */}
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: showGreeting ? 0 : 1, y: showGreeting ? 10 : 0 }}
+          transition={{ delay: 1.8, duration: 0.8 }}
+          className="text-gray-700 dark:text-gray-200 text-lg sm:text-lg max-w-xl mx-auto text-center mt-2 mb-8 whitespace-nowrap"
+        >
+          Practice, learn, and excel with free & pro questions curated for every learner.
+        </motion.p>
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: showGreeting ? 0 : 1, y: showGreeting ? 10 : 0 }}
+          transition={{ delay: 2, duration: 0.8 }}
+          className="flex justify-center gap-4 mb-12"
+        >
+          <button
+            onClick={handleGetStarted}
+            className="px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold text-lg shadow-md hover:bg-blue-700 transition-colors"
+          >
+            Get Started
+          </button>
+          <a
+            href="/login"
+            className="px-6 py-3 rounded-xl border border-gray-400 dark:border-gray-600 text-gray-900 dark:text-white font-semibold text-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            🔑 Login
+          </a>
+        </motion.div>
+
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+          {featureCards.map((card, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: showGreeting ? 0 : 1, y: showGreeting ? 10 : 0 }}
+              transition={{ delay: 2.2 + idx * 0.2, duration: 0.8 }}
+              className={`flex flex-col items-center p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 ${card.bgColor}`}
+            >
+              {card.icon}
+              <h2 className="text-xl font-semibold mb-2 text-center dark:text-white">{card.title}</h2>
+              <p className="text-center text-gray-700 dark:text-gray-200 text-sm">{card.description}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Call To Action */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: showGreeting ? 0 : 1, y: showGreeting ? 10 : 0 }}
+          transition={{ delay: 2.8, duration: 0.8 }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-lg sm:text-lg font-bold dark:text-white mb-4">
+            Are you ready to start?
+          </h2>
+          <a
+            href="/register"
+            className="px-8 py-4 rounded-xl bg-green-600 text-white font-bold text-lg shadow-md hover:bg-green-700 transition-colors"
+          >
+            Register Now
+          </a>
+        </motion.div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-blue-700 dark:bg-gray-800 text-white text-center py-3 mt-auto text-sm">
+        <p>© {new Date().getFullYear()} Question Bank. All rights reserved.</p>
+      </footer>
+
+      {/* Styles */}
+      <style jsx>{`
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-15px); }
+        }
+        .animate-bounce-slow { animation: bounce-slow 2.5s ease-in-out infinite; }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        .animate-float { animation: float 2.5s ease-in-out infinite; }
+
+        /* 🎓 Pulse + Glow Color Changing */
+        @keyframes pulse-glow {
+          0% { transform: scale(1); filter: drop-shadow(0 0 6px #3b82f6); }
+          25% { transform: scale(1.1); filter: drop-shadow(0 0 10px #9333ea); }
+          50% { transform: scale(1.2); filter: drop-shadow(0 0 12px #ec4899); }
+          75% { transform: scale(1.1); filter: drop-shadow(0 0 10px #9333ea); }
+          100% { transform: scale(1); filter: drop-shadow(0 0 6px #3b82f6); }
+        }
+        .animated-icon {
+          display: inline-block;
+          animation: pulse-glow 3s infinite ease-in-out;
+        }
+
+        .arabic-font {
+          font-family: 'Cairo', 'Noto Naskh Arabic', sans-serif;
+          line-height: 1;
+          white-space: nowrap;
+        }
+      `}</style>
+
+      <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap"
+        rel="stylesheet"
+      />
     </div>
   );
 }

@@ -1,24 +1,16 @@
-import "./globals.css";
-import Providers from "./providers";
-import Navbar from "@/components/Navbar";
+'use client';
+import { DarkModeProvider } from '@/context/DarkModeContext';
+import Navbar from '@/components/Navbar';
+import './globals.css';
 
-export const metadata = {
-  title: "My App",
-  description: "Next.js Auth Example",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <Providers>
+        <DarkModeProvider>
           <Navbar />
-          <main className="p-6">{children}</main>
-        </Providers>
+          <main>{children}</main>
+        </DarkModeProvider>
       </body>
     </html>
   );
