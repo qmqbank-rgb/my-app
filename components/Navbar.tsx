@@ -35,7 +35,6 @@ export default function Navbar() {
       ? "border-b-2 border-yellow-400 text-yellow-400 pb-1 transition-colors duration-200 text-lg font-semibold"
       : "text-gray-900 dark:text-white hover:text-yellow-300 transition-colors duration-200 text-lg font-semibold";
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -46,7 +45,6 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
 
-  // Handle avatar upload
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -58,11 +56,11 @@ export default function Navbar() {
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, file, { upsert: true });
-
     if (uploadError) return;
 
     const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-    const avatarUrl = data.publicUrl;
+    const avatarUrl = data?.publicUrl;
+    if (!avatarUrl) return;
 
     await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
     await refreshUser();
@@ -70,19 +68,17 @@ export default function Navbar() {
 
   return (
     <nav className="
-      sticky top-0 z-50 
-      bg-gradient-to-r from-blue-600/80 to-purple-600/80 
+      sticky top-0 z-50
+      bg-gradient-to-r from-blue-600/80 to-purple-600/80
       dark:from-gray-900/60 dark:to-gray-900/60
-      backdrop-blur-md border-b border-white/20 dark:border-gray-700/50 
+      backdrop-blur-md border-b border-white/20 dark:border-gray-700/50
       shadow-lg
     ">
       <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
-        {/* Logo */}
         <Link href="/" className="flex items-center">
           <Image src="/qmqbank_logo.svg" alt="Logo" width={48} height={48} priority />
         </Link>
 
-        {/* Desktop Links */}
         <ul className="hidden md:flex items-center space-x-8">
           <li><Link href="/" className={linkClass("/")}>Home</Link></li>
           <li><Link href="/about" className={linkClass("/about")}>About</Link></li>
@@ -90,7 +86,6 @@ export default function Navbar() {
           <li><Link href="/dashboard" className={linkClass("/dashboard")}>Dashboard</Link></li>
         </ul>
 
-        {/* Right Side */}
         <div className="flex items-center space-x-4">
           <button className="relative text-gray-900 dark:text-white hover:text-yellow-300">
             <FiBell size={20} />
@@ -102,14 +97,16 @@ export default function Navbar() {
           <div className="relative hidden md:block" ref={dropdownRef}>
             <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2">
               {user?.user_metadata?.avatar_url ? (
-                <img
-                  src={`${user.user_metadata.avatar_url}?t=${Date.now()}`}
+                <Image
+                  src={user.user_metadata.avatar_url}
                   alt="avatar"
-                  className="w-8 h-8 rounded-full border-2 border-yellow-400 object-cover"
+                  width={32}
+                  height={32}
+                  className="rounded-full border-2 border-yellow-400 object-cover"
                 />
               ) : user ? (
                 <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
-                  {getInitials(user.user_metadata?.full_name || user.email)}
+                  {getInitials(user.user_metadata?.full_name || user.email || 'U')}
                 </div>
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-700 flex items-center justify-center text-white">
@@ -143,14 +140,12 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
 
-          {/* Mobile Menu Button */}
           <button className="md:hidden text-gray-900 dark:text-white hover:text-yellow-300" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div

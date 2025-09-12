@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
+import { useState } from 'react';
+import Image from 'next/image';
 
 interface User {
   id: string;
@@ -19,25 +19,25 @@ interface ProfileFormProps {
 interface ProfileFormValues {
   username: string;
   email: string;
-  avatarUrl?: string;
+  avatarUrl: string; // string, never undefined
 }
 
 export default function ProfileForm({ user }: ProfileFormProps) {
   const [values, setValues] = useState<ProfileFormValues>({
-    username: user.user_metadata?.full_name || "",
-    email: user.email || "",
-    avatarUrl: "",
+    username: user.user_metadata?.full_name || '',
+    email: user.email || '',
+    avatarUrl: '/default.png', // default value
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setValues((prev) => ({ ...prev, [name]: value }));
+    setValues(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitted values:", values);
-    // এখানে আপনার submit logic লিখুন
+    console.log('Submitted values:', values);
+    // এখানে আপনার submit logic লিখতে পারেন
   };
 
   return (
@@ -50,7 +50,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       {/* Avatar */}
       <div className="flex flex-col items-center">
         <Image
-          src={values.avatarUrl || "/default.png"}
+          src={values.avatarUrl || '/default.png'} // fallback নিশ্চিত
           alt="Avatar"
           width={100}
           height={100}
@@ -60,7 +60,10 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
       {/* Username */}
       <div className="flex flex-col">
-        <label htmlFor="username" className="mb-1 font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="username"
+          className="mb-1 font-medium text-gray-700 dark:text-gray-300"
+        >
           Username
         </label>
         <input
@@ -75,7 +78,10 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
       {/* Email */}
       <div className="flex flex-col">
-        <label htmlFor="email" className="mb-1 font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="email"
+          className="mb-1 font-medium text-gray-700 dark:text-gray-300"
+        >
           Email
         </label>
         <input
