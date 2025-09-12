@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function AboutPage() {
   return (
@@ -105,10 +106,12 @@ export default function AboutPage() {
                 whileHover={{ scale: 1.05 }}
                 className="p-6 bg-gray-800 rounded-xl border border-gray-700 space-y-3"
               >
-                <img
+                <Image
                   src="/qmqbank_logo.svg"
                   alt="QmqBank Logo"
-                  className="w-24 h-24 mx-auto rounded-full border-2 border-purple-400 bg-white p-2"
+                  width={96}   // Tailwind w-24
+                  height={96}  // Tailwind h-24
+                  className="mx-auto rounded-full border-2 border-purple-400 bg-white p-2"
                 />
                 <h3 className="text-lg font-bold text-white">{member.name}</h3>
                 <p className="text-sm text-gray-400">{member.role}</p>

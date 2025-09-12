@@ -24,7 +24,11 @@ export default function Navbar() {
   };
 
   const getInitials = (name: string) =>
-    name.split(' ').map(n => n[0]).join('').toUpperCase();
+    name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase();
 
   const linkClass = (href: string) =>
     pathname === href
@@ -51,19 +55,17 @@ export default function Navbar() {
     const fileName = `${user.id}.${fileExt}`;
     const filePath = fileName;
 
-    // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, file, { upsert: true });
+
     if (uploadError) return;
 
-    // Get public URL
     const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
     const avatarUrl = data.publicUrl;
 
-    // Update user metadata
     await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
-    await refreshUser(); // Live update → Navbar will re-render
+    await refreshUser();
   };
 
   return (
@@ -90,21 +92,18 @@ export default function Navbar() {
 
         {/* Right Side */}
         <div className="flex items-center space-x-4">
-          {/* Notification */}
           <button className="relative text-gray-900 dark:text-white hover:text-yellow-300">
             <FiBell size={20} />
             <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
 
-          {/* Dark Mode */}
           <DarkModeToggle />
 
-          {/* Profile Dropdown */}
           <div className="relative hidden md:block" ref={dropdownRef}>
             <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2">
               {user?.user_metadata?.avatar_url ? (
                 <img
-                  src={`${user.user_metadata.avatar_url}?t=${Date.now()}`} // cache-busting
+                  src={`${user.user_metadata.avatar_url}?t=${Date.now()}`}
                   alt="avatar"
                   className="w-8 h-8 rounded-full border-2 border-yellow-400 object-cover"
                 />
@@ -127,9 +126,7 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-44 
-                             bg-white/90 dark:bg-gray-800/90 
-                             backdrop-blur-lg shadow-xl rounded-lg z-50"
+                  className="absolute right-0 mt-2 w-44 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg shadow-xl rounded-lg z-50"
                 >
                   <Link href="/profile" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Profile</Link>
                   <Link href="/settings" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Settings</Link>

@@ -34,7 +34,7 @@ export default function OverviewPage() {
     <div className="space-y-8">
       {/* Header */}
       <h2 className="text-3xl font-bold">📊 Dashboard Overview</h2>
-      <p className="text-gray-600">Welcome to your QmqBank dashboard. Here's your account summary.</p>
+      <p className="text-gray-600">Welcome to your QmqBank dashboard. Here&apos;s your account summary.</p>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
