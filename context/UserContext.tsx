@@ -17,28 +17,56 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const refreshUser = async () => {
-    const { data } = await supabase.auth.getUser();
-    setUser(data.user);
+    try {
+      // Get current user
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.warn('User fetch warning:', userError.message || userError);
+        setUser(null);
+        setAvatarUrl(null);
+        return;
+      }
+      setUser(currentUser);
 
-    if (data.user) {
-      const { data: profile, error } = await supabase
+      if (!currentUser) {
+        setAvatarUrl(null);
+        return;
+      }
+
+      // Fetch profile
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', data.user.id)
+        .eq('id', currentUser.id)
         .single();
 
-      if (error) {
-        console.error(error);
+      if (profileError) {
+        // Safe logging: if error is empty object, log readable message
+        const errorMsg = profileError?.message || 'Unknown profile fetch error';
+        console.warn('Profile fetch warning:', errorMsg);
         setAvatarUrl(null);
       } else if (profile?.avatar_url) {
-        const { data: signedUrlData } = await supabase.storage
-          .from('avatars-private')
-          .createSignedUrl(profile.avatar_url, 60);
-        setAvatarUrl(signedUrlData?.signedUrl ?? null);
+        try {
+          const { data: signedUrlData, error: storageError } = await supabase.storage
+            .from('avatars-private')
+            .createSignedUrl(profile.avatar_url, 60);
+
+          if (storageError) {
+            console.warn('Avatar signed URL warning:', storageError.message || storageError);
+            setAvatarUrl(null);
+          } else {
+            setAvatarUrl(signedUrlData?.signedUrl ?? null);
+          }
+        } catch (err) {
+          console.warn('Avatar fetch exception:', err);
+          setAvatarUrl(null);
+        }
       } else {
         setAvatarUrl(null);
       }
-    } else {
+    } catch (err) {
+      console.warn('Unexpected error in refreshUser:', err);
+      setUser(null);
       setAvatarUrl(null);
     }
   };
