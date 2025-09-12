@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import NextAuth, { AuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 
@@ -11,12 +12,20 @@ export const authOptions: AuthOptions = {
   session: { strategy: "jwt" as const },
   callbacks: {
     async session({ session, token }) {
-      session.user.id = token.sub;
+      if (session?.user) {
+        session.user.id = token.sub ?? "";
+      }
       return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
+// ✅ Next.js 15 App Router compatible handlers
+export async function GET(req: NextRequest) {
+  return await NextAuth(authOptions)(req);
+}
+
+export async function POST(req: NextRequest) {
+  return await NextAuth(authOptions)(req);
+}
