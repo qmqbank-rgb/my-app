@@ -11,10 +11,10 @@ interface Props {
 }
 
 export default function AuthCard({ mode }: Props) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [fullName, setFullName] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -37,7 +37,10 @@ export default function AuthCard({ mode }: Props) {
           password,
           options: {
             data: { full_name: fullName },
-            emailRedirectTo: `${window.location.origin}/login`,
+            emailRedirectTo:
+              typeof window !== "undefined"
+                ? `${window.location.origin}/login`
+                : undefined,
           },
         });
         if (error) throw error;
@@ -50,8 +53,12 @@ export default function AuthCard({ mode }: Props) {
         if (error) throw error;
         setSuccess("Login successful!");
       }
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
@@ -66,12 +73,16 @@ export default function AuthCard({ mode }: Props) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: process.env.NEXT_PUBLIC_SUPABASE_REDIRECT_URI,
+          redirectTo: process.env.NEXT_PUBLIC_SUPABASE_REDIRECT_URI || undefined,
         },
       });
       if (error) throw error;
-    } catch (err: any) {
-      setError(err?.message || "Google sign-in failed");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Google sign-in failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -136,14 +147,20 @@ export default function AuthCard({ mode }: Props) {
           {mode === "register" ? (
             <span>
               Already have an account?{" "}
-              <Link className="font-semibold underline underline-offset-4" href="/login">
+              <Link
+                className="font-semibold underline underline-offset-4"
+                href="/login"
+              >
                 Sign in
               </Link>
             </span>
           ) : (
             <span>
               New here?{" "}
-              <Link className="font-semibold underline underline-offset-4" href="/register">
+              <Link
+                className="font-semibold underline underline-offset-4"
+                href="/register"
+              >
                 Create an account
               </Link>
             </span>

@@ -1,24 +1,28 @@
-import "./globals.css";
-import Providers from "./providers";
-import Navbar from "@/components/Navbar";
+'use client';
 
-export const metadata = {
-  title: "My App",
-  description: "Next.js Auth Example",
-};
+import { ReactNode } from 'react';
+import { UserProvider } from '../context/UserContext';
+import { DarkModeProvider } from '@/context/DarkModeContext';
+import Navbar from '@/components/Navbar';
+import './globals.css';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body>
-        <Providers>
-          <Navbar />
-          <main className="p-6">{children}</main>
-        </Providers>
+        {/* Outer: UserProvider - সব user-related hook safe */}
+        <UserProvider>
+          {/* Inner: DarkModeProvider */}
+          <DarkModeProvider>
+            {/* Navbar can use useUser() and useDarkMode() */}
+            <Navbar />
+            <main>{children}</main>
+          </DarkModeProvider>
+        </UserProvider>
       </body>
     </html>
   );

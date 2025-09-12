@@ -19,10 +19,12 @@ export default function TransactionsPage() {
       try {
         const res = await fetch("/api/transactions");
         if (!res.ok) throw new Error("Failed to fetch transactions");
-        const data = await res.json();
+        const data: Transaction[] = await res.json(); // explicit typing
         setTransactions(data);
-      } catch (err: any) {
-        setError(err.message || "Something went wrong");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Something went wrong";
+        setError(message);
       } finally {
         setLoading(false);
       }

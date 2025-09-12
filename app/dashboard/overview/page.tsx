@@ -2,7 +2,20 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const transactionData = [
+type TransactionData = {
+  date: string;
+  amount: number;
+};
+
+type RecentTransaction = {
+  id: number;
+  date: string;
+  type: string;
+  amount: number;
+  status: "Completed" | "Pending";
+};
+
+const transactionData: TransactionData[] = [
   { date: "Aug 25", amount: 500 },
   { date: "Aug 26", amount: 700 },
   { date: "Aug 27", amount: 300 },
@@ -10,7 +23,7 @@ const transactionData = [
   { date: "Aug 29", amount: 400 },
 ];
 
-const recentTransactions = [
+const recentTransactions: RecentTransaction[] = [
   { id: 1, date: "2025-09-01", type: "Deposit", amount: 500, status: "Completed" },
   { id: 2, date: "2025-08-30", type: "Withdrawal", amount: -200, status: "Pending" },
   { id: 3, date: "2025-08-28", type: "Transfer", amount: -100, status: "Completed" },
@@ -67,11 +80,18 @@ export default function OverviewPage() {
           </thead>
           <tbody>
             {recentTransactions.map((txn) => (
-              <tr key={txn.id} className="border-t border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 transition">
+              <tr
+                key={txn.id}
+                className="border-t border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
+              >
                 <td className="p-2">{txn.date}</td>
                 <td className="p-2">{txn.type}</td>
                 <td className="p-2">{txn.amount < 0 ? `-$${Math.abs(txn.amount)}` : `$${txn.amount}`}</td>
-                <td className={`p-2 font-semibold ${txn.status === "Completed" ? "text-green-600" : "text-red-600"}`}>
+                <td
+                  className={`p-2 font-semibold ${
+                    txn.status === "Completed" ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   {txn.status}
                 </td>
               </tr>

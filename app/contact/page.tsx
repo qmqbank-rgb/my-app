@@ -23,6 +23,14 @@ export default function ContactPage() {
             <li>📞 <span className="ml-2">+880 1234 567 890</span></li>
             <li>📍 <span className="ml-2">Dhaka, Bangladesh</span></li>
           </ul>
+
+          {/* Example mailto button */}
+          <a
+            href="mailto:info@myapp.com"
+            className="inline-block mt-6 px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition"
+          >
+            Email Us
+          </a>
         </motion.div>
 
         {/* Right side - Contact Form */}

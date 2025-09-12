@@ -1,12 +1,13 @@
 "use client";
 
-import { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes, ReactNode } from "react";
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
+  children: ReactNode; // children এর type explicit করলে TypeScript আরও strict হবে
 }
 
-export default function SubmitButton({ loading, children, ...rest }: Props) {
+export default function SubmitButton({ loading = false, children, ...rest }: Props) {
   return (
     <button
       disabled={loading}
