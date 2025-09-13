@@ -1,8 +1,21 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  // মোবাইল / অন্য ডিভাইস থেকে লোকাল সার্ভারে ঢোকার জন্য
-  allowedDevOrigins: ["192.168.1.10"], 
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com", // Google Avatar
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com", // GitHub Avatar
+      },
+      {
+        protocol: "https",
+        hostname: "pbs.twimg.com", // Twitter Avatar
+      },
+    ],
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

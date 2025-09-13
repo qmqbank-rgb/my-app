@@ -98,7 +98,7 @@ export default function Navbar() {
             <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2">
               {user?.user_metadata?.avatar_url ? (
                 <Image
-                  src={user.user_metadata.avatar_url}
+                  src={user.user_metadata.avatar_url || "/default.png"} // fallback
                   alt="avatar"
                   width={32}
                   height={32}
@@ -106,7 +106,7 @@ export default function Navbar() {
                 />
               ) : user ? (
                 <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
-                  {getInitials(user.user_metadata?.full_name || user.email || 'U')}
+                  {getInitials(user.user_metadata?.full_name || user.email || "U")}
                 </div>
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-700 flex items-center justify-center text-white">
