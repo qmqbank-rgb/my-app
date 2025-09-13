@@ -3,15 +3,15 @@ import type { NextRequest } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next(); // res তৈরি করুন
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
 
-  const supabase = createMiddlewareClient({ req, res }); // req + res উভয় দিতে হবে
-
+  // কুকি থেকে ইউজার নাও
   const { data: { user } } = await supabase.auth.getUser();
 
   const url = req.nextUrl.clone();
+  const protectedPaths = ["/profile", "/dashboard"];
 
-  const protectedPaths = ["/dashboard", "/settings", "/profile", "/orders"];
   const isProtected = protectedPaths.some(path => url.pathname.startsWith(path));
 
   if (isProtected && !user) {
@@ -19,14 +19,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if ((url.pathname === "/login" || url.pathname === "/register") && user) {
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
-  }
-
   return res;
 }
 
 export const config = {
-  matcher: ["/dashboard", "/settings", "/profile", "/orders", "/login", "/register"],
+  matcher: ["/profile", "/dashboard", "/settings"]
 };
