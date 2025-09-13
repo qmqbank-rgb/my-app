@@ -1,13 +1,15 @@
-import { Client } from 'pg';
+// app/db/client.ts
+import pkg from 'pg';
+const { Client } = pkg;
 
-export async function getDbClient(userEmail: string, userPassword: string) {
-  const client = new Client({
-    user: userEmail,
-    password: userPassword,
-    host: 'localhost',
-    database: 'myapp'
-  });
+let client: InstanceType<typeof Client> | null = null;
 
-  await client.connect();
+export function getDbClient() {
+  if (!client) {
+    client = new Client({
+      connectionString: process.env.DATABASE_URL, // safer
+    });
+    client.connect().catch((err: Error) => console.error('DB connect error:', err));
+  }
   return client;
 }
