@@ -1,17 +1,12 @@
-import { getDbClient } from '../db/client';
+// app/services/profile.ts
+import { getDbClient } from '@/app/db/client';
 
-export async function updateAvatar(userEmail: string, userPassword: string, avatarUrl: string) {
-  const client = await getDbClient(userEmail, userPassword);
-
+export async function updateAvatar(userId: string, avatarUrl: string) {
+  const client = getDbClient();
   const query = `
     UPDATE profiles
     SET avatar_url = $1
-    WHERE email = current_user
-    RETURNING *;
+    WHERE id = $2
   `;
-
-  const res = await client.query(query, [avatarUrl]);
-  await client.end();
-
-  return res.rows[0];
+  await client.query(query, [avatarUrl, userId]);
 }
