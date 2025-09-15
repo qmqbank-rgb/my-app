@@ -1,24 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+// app/api/login/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
+// Supabase client (client-side operations)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
+  try {
+    const { email, password } = await req.json();
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
+    }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 401 });
+    // Client-side login method
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  // সেশন কুকিতে সেট করা হবে
-  const res = NextResponse.json({ user: data.user });
-  data.session && res.cookies.set("sb-access-token", data.session.access_token, { path: "/" });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
 
-  return res;
+    return NextResponse.json({ user: data.user, session: data.session });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
