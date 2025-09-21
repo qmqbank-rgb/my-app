@@ -4,15 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import {
-  FiMenu,
-  FiX,
-  FiHome,
-  FiUser,
-  FiActivity,
-  FiSettings,
-  FiDollarSign,
-} from "react-icons/fi";
+import { FiMenu, FiX, FiHome, FiUser, FiActivity, FiSettings } from "react-icons/fi";
+
+interface MenuItem {
+  name: string;
+  href: string;
+  icon: React.ReactNode;
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -21,10 +19,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/");
+    router.push("/login");
   };
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { name: "Overview", href: "/dashboard", icon: <FiHome /> },
     { name: "Profile", href: "/dashboard/profile", icon: <FiUser /> },
     { name: "Transactions", href: "/dashboard/transactions", icon: <FiActivity /> },

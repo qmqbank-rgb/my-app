@@ -1,5 +1,5 @@
 import Navbar from "@/components/Navbar";  // ← এটা মিসিং ছিল
-import { Separator } from "@/components/ui/separator";
+
 
 export default function Header() {
   return (
