@@ -18,9 +18,10 @@ export default function ForgotPasswordPage() {
     setMessage(null);
 
     try {
+      // ✅ নিশ্চিত কর redirect path ঠিক আছে
       const redirectTo =
-        process.env.NEXT_PUBLIC_SUPABASE_RESET_PASSWORD_REDIRECT ||
-        `${window.location.origin}/auth/reset-password`;
+        process.env.NEXT_PUBLIC_SUPABASE_RESET_PASSWORD_REDIRECT ??
+        `${window.location.origin}/reset-password`; // (auth) route group URL এ দেখা যায় না
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,
@@ -28,28 +29,40 @@ export default function ForgotPasswordPage() {
 
       if (resetError) throw resetError;
 
-      setMessage('Password reset email sent. Check your inbox.');
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset email.');
+      setMessage('✅ Password reset email sent. Please check your inbox.');
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else if (typeof err === 'string') setError(err);
+      else setError('Failed to send reset email. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen grid place-items-center bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-2xl shadow">
-        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Forgot Password</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow p-8">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">
+          Forgot Password
+        </h1>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Email"
+            label="Email Address"
             type="email"
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
-          {message && <div className="text-sm text-emerald-600 dark:text-emerald-400">{message}</div>}
+
+          {error && (
+            <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+          )}
+          {message && (
+            <p className="text-sm text-green-600 dark:text-green-400 text-center">{message}</p>
+          )}
+
           <SubmitButton loading={loading}>Send Reset Email</SubmitButton>
         </form>
       </div>

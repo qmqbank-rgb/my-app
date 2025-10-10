@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Input from '@/components/Input';
 import SubmitButton from '@/components/SubmitButton';
 
-export default function ResetPasswordPage() {
+/**
+ * 🔹 Wrapper Component — Suspense-safe version
+ * Reason: useSearchParams() must be used inside a Suspense boundary.
+ */
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const accessToken = searchParams.get('access_token'); // Supabase স্বয়ংক্রিয়ভাবে handle করবে
+  const accessToken = searchParams.get('access_token');
 
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -20,7 +24,7 @@ export default function ResetPasswordPage() {
     if (!accessToken) setError('Invalid or expired reset link.');
   }, [accessToken]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!accessToken) return;
 
@@ -29,16 +33,15 @@ export default function ResetPasswordPage() {
     setError(null);
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      });
+      const { error: updateError } = await supabase.auth.updateUser({ password });
 
       if (updateError) throw updateError;
 
-      setMessage('Password updated successfully! Redirecting to login...');
-      setTimeout(() => router.push('/login'), 2000); // 2 সেকেন্ড পর login page এ redirect
-    } catch (err: any) {
-      setError(err.message || 'Failed to update password.');
+      setMessage('✅ Password updated successfully! Redirecting to login...');
+      setTimeout(() => router.push('/login'), 2000);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError('Failed to update password.');
     } finally {
       setLoading(false);
     }
@@ -50,6 +53,7 @@ export default function ResetPasswordPage() {
         <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">
           Set a New Password
         </h1>
+
         {error && <p className="text-red-600 dark:text-red-400 mb-4 text-center">{error}</p>}
         {message ? (
           <p className="text-green-600 dark:text-green-400 text-center">{message}</p>
@@ -69,5 +73,17 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * 🔹 Export Default — wrapped in Suspense
+ * Prevents “missing suspense with CSR bailout” build error
+ */
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="text-center mt-20 text-gray-500">Loading...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

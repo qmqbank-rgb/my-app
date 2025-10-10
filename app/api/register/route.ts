@@ -51,14 +51,13 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error("Register API error:", err);
 
-    // Handle unique constraint error (email already exists)
+    // Handle Prisma unique constraint error
     if (
       typeof err === "object" &&
       err !== null &&
       "code" in err &&
-      (err as any).code === "P2002" &&
-      "meta" in err &&
-      (err as any).meta?.target?.includes("email")
+      (err as { code?: string; meta?: { target?: string[] } }).code === "P2002" &&
+      (err as { code?: string; meta?: { target?: string[] } }).meta?.target?.includes("email")
     ) {
       return NextResponse.json(
         { error: "Email already registered." },
