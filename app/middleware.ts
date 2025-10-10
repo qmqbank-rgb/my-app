@@ -7,7 +7,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function middleware(req: NextRequest) {
   const supabase = createClient(supabaseUrl, supabaseAnonKey, { global: { fetch } });
-
   const token = req.cookies.get("sb-access-token")?.value;
   let user = null;
 
@@ -17,8 +16,7 @@ export async function middleware(req: NextRequest) {
   }
 
   const url = req.nextUrl.clone();
-
-  const protectedPaths = ["/dashboard", "/settings", "/profile"];
+  const protectedPaths = ["/dashboard", "/profile", "/settings"];
   const isProtected = protectedPaths.some(path => url.pathname.startsWith(path));
 
   if (isProtected && !user) {

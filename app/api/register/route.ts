@@ -1,4 +1,3 @@
-// app/api/register/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import prisma from "@/lib/prismaClient";
@@ -6,19 +5,26 @@ import prisma from "@/lib/prismaClient";
 interface RegisterRequestBody {
   email: string;
   password: string;
+  name?: string;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password }: RegisterRequestBody = await req.json();
+    const body: RegisterRequestBody = await req.json();
+    const { email, password, name } = body;
 
-    // Basic validation
     if (!email || !password) {
-      return NextResponse.json({ error: "Email and password required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Email and password are required." },
+        { status: 400 }
+      );
     }
 
     if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters." },
+        { status: 400 }
+      );
     }
 
     // Hash password
@@ -29,15 +35,42 @@ export async function POST(req: NextRequest) {
       data: {
         email,
         password: hashedPassword,
+        name,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
       },
     });
 
     return NextResponse.json({
-      message: "User created",
-      user: { id: newUser.id, email: newUser.email },
+      message: "User created successfully",
+      user: newUser,
     });
-  } catch (err) {
-    console.error("Register API Error:", err);
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("Register API error:", err);
+
+    // Handle unique constraint error (email already exists)
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as any).code === "P2002" &&
+      "meta" in err &&
+      (err as any).meta?.target?.includes("email")
+    ) {
+      return NextResponse.json(
+        { error: "Email already registered." },
+        { status: 400 }
+      );
+    }
+
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Failed to create user. Please try again.";
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -8,28 +8,37 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const file = formData.get("file");
     const userId = formData.get("userId") as string | null;
 
-    if (!file || !userId) {
-      return NextResponse.json({ error: "File or userId missing" }, { status: 400 });
+    if (!file || !(file instanceof File)) {
+      return NextResponse.json({ error: "No valid file provided" }, { status: 400 });
+    }
+    if (!userId || userId.trim() === "") {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
-    const filePath = `public/${userId}/${file.name}`;
+    const filePath = `public/${userId}/${Date.now()}-${file.name}`;
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
     }
 
+    // getPublicUrl only returns data, no error
     const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    const publicUrl = data?.publicUrl;
 
-    return NextResponse.json({ url: data.publicUrl });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    if (!publicUrl) {
+      return NextResponse.json({ error: "Failed to get public URL" }, { status: 500 });
+    }
+
+    return NextResponse.json({ url: publicUrl });
+  } catch (err) {
+    console.error("Upload API error:", err);
+    return NextResponse.json({ error: "Something went wrong during upload" }, { status: 500 });
   }
 }

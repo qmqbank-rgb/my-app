@@ -1,20 +1,24 @@
-"use client";
+'use client';
 
-import { ButtonHTMLAttributes, ReactNode } from "react";
+import React, { ButtonHTMLAttributes, ReactNode } from 'react';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
-  children: ReactNode; // children এর type explicit করলে TypeScript আরও strict হবে
+  children: ReactNode;
+  type?: 'button' | 'submit' | 'reset';
 }
 
-export default function SubmitButton({ loading = false, children, ...rest }: Props) {
+export default function SubmitButton({ loading = false, children, type = 'submit', ...rest }: Props) {
   return (
     <button
+      type={type}
       disabled={loading}
-      className="w-full rounded-2xl bg-gray-900 px-4 py-3 font-semibold text-white shadow-lg transition hover:opacity-95 disabled:opacity-60 dark:bg-gray-100 dark:text-gray-900"
       {...rest}
+      className={`w-full py-3 px-4 rounded-xl font-semibold shadow-lg transition
+        text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60
+        dark:bg-gray-100 dark:text-gray-900 dark:hover:opacity-95`}
     >
-      {loading ? "Processing…" : children}
+      {loading ? 'Processing…' : children}
     </button>
   );
 }

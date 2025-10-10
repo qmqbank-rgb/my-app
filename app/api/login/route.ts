@@ -1,8 +1,7 @@
-// app/api/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { serialize } from 'cookie';
 
-// Supabase client (client-side operations)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -16,17 +15,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
     }
 
-    // Client-side login method
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
+    if (error || !data.session || !data.user) {
+      return NextResponse.json({ error: error?.message || 'Invalid credentials' }, { status: 401 });
     }
 
-    return NextResponse.json({ user: data.user, session: data.session });
+    const cookie = serialize('sb-session', data.session.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: data.session.expires_in,
+    });
+
+    return NextResponse.json(
+      {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          role: data.user.user_metadata?.role || 'student',
+        },
+      },
+      { status: 200, headers: { 'Set-Cookie': cookie } }
+    );
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

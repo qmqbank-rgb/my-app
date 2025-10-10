@@ -14,6 +14,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "pbs.twimg.com", // Twitter Avatar
       },
+      {
+        protocol: "https",
+        hostname: "kjjsnqheahlpybarytej.supabase.co", // ✅ Supabase bucket
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
 };

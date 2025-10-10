@@ -49,21 +49,38 @@ export default function Navbar() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}.${fileExt}`;
-    const filePath = fileName;
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = fileName;
 
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, file, { upsert: true });
-    if (uploadError) return;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) {
+        alert(`Avatar upload failed: ${uploadError.message}`);
+        return;
+      }
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-    const avatarUrl = data?.publicUrl;
-    if (!avatarUrl) return;
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const avatarUrl = data?.publicUrl;
+      if (!avatarUrl) {
+        alert('Failed to get avatar URL.');
+        return;
+      }
 
-    await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
-    await refreshUser();
+      const { error: updateError } = await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
+      if (updateError) {
+        alert(`Failed to update avatar: ${updateError.message}`);
+        return;
+      }
+
+      await refreshUser();
+      alert('Avatar updated successfully!');
+    } catch (err: unknown) {
+      if (err instanceof Error) alert(err.message);
+      else alert('Unknown error occurred while uploading avatar.');
+    }
   };
 
   return (
@@ -74,6 +91,9 @@ export default function Navbar() {
       backdrop-blur-md border-b border-white/20 dark:border-gray-700/50
       shadow-lg
     ">
+      {/* Logo Preload */}
+      <link rel="preload" href="/qmqbank_logo.svg" as="image" />
+
       <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
         <Link href="/" className="flex items-center">
           <Image src="/qmqbank_logo.svg" alt="Logo" width={48} height={48} priority />
@@ -98,7 +118,7 @@ export default function Navbar() {
             <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2">
               {user?.user_metadata?.avatar_url ? (
                 <Image
-                  src={user.user_metadata.avatar_url || "/default.png"} // fallback
+                  src={user.user_metadata.avatar_url || "/default.png"}
                   alt="avatar"
                   width={32}
                   height={32}

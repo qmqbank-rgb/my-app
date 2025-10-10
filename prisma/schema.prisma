@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql" // PlanetScale হলে mysql
+  provider = "postgresql" // MySQL হলে provider="mysql"
   url      = env("DATABASE_URL")
 }
 
