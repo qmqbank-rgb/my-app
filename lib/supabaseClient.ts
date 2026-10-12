@@ -1,14 +1,28 @@
+```ts
 // lib/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Debug: চেক করতে
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Anon Key:', supabaseAnonKey);
+if (!supabaseUrl) {
+  throw new Error('supabaseUrl is required.');
+}
 
-if (!supabaseUrl) throw new Error('supabaseUrl is required.');
-if (!supabaseAnonKey) throw new Error('supabaseAnonKey is required.');
+if (!supabaseAnonKey) {
+  throw new Error('supabaseAnonKey is required.');
+}
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(
+  supabaseUrl,
+  supabaseAnonKey,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
+);
+```
